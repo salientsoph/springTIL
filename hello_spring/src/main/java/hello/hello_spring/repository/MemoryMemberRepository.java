@@ -40,4 +40,8 @@ public class MemoryMemberRepository implements MemberRepository{
         //Map -> List 로 반환 (new ArrayList<>())
         return new ArrayList<>(store.values());
     }
+
+    public void clearStore(){
+        store.clear(); //저장소를 지운다
+    }
 }
