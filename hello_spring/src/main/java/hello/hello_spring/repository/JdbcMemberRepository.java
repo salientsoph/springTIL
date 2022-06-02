@@ -18,7 +18,7 @@ public class JdbcMemberRepository implements MemberRepository{
     //application.properties에서 설정한 것들(spring.datasource)은 springBoot가 dataSource를 만든다.
     public JdbcMemberRepository(DataSource dataSource) { //spring을 통해 주입받는다
         this.dataSource = dataSource;
-        //dataSource.getConnection(); //여기에 sql문을 넣어 db에 전달할 수 있음(db와 연결되는 문장)
+        //dataSource.getConnection(); //여기에 sql문을 넣어 db에 전달할 수 있음(db와 연결되는 문장) //이러면 계속 새로운 connection이 주어진다
     }
 
     @Override
@@ -37,11 +37,13 @@ public class JdbcMemberRepository implements MemberRepository{
         ResultSet rs = null;
         try {
             conn = getConnection();
-            pstmt = conn.prepareStatement(sql,
-                    Statement.RETURN_GENERATED_KEYS);
-            pstmt.setString(1, member.getName());
-            pstmt.executeUpdate();
-            rs = pstmt.getGeneratedKeys();
+            pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS); //RETURN_GENERATED_KEYS: 1, 2 등 값을 매기면 넣어봐야지 앎.
+
+            pstmt.setString(1, member.getName()); //첫번재 (?)와 매칭됨
+
+            pstmt.executeUpdate(); //db에 실제 쿼리가 날라감
+            rs = pstmt.getGeneratedKeys(); //RETURN_GENERATED_KEYS와 매칭됨. rs에는 시퀀스로 들어간 id값을 꺼내온다.
+
             if (rs.next()) {
                 member.setId(rs.getLong(1));
             } else {
@@ -54,17 +56,22 @@ public class JdbcMemberRepository implements MemberRepository{
             close(conn, pstmt, rs);
         }
     }
+
     @Override
     public Optional<Member> findById(Long id) {
         String sql = "select * from member where id = ?";
+
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+
         try {
             conn = getConnection();
             pstmt = conn.prepareStatement(sql);
             pstmt.setLong(1, id);
-            rs = pstmt.executeQuery();
+
+            rs = pstmt.executeQuery(); //조회는 executeUpdate() 대신 executeQuery() 를 사용한다.
+
             if(rs.next()) {
                 Member member = new Member();
                 member.setId(rs.getLong("id"));
@@ -73,22 +80,28 @@ public class JdbcMemberRepository implements MemberRepository{
             } else {
                 return Optional.empty();
             }
+
         } catch (Exception e) {
             throw new IllegalStateException(e);
         } finally {
             close(conn, pstmt, rs);
         }
     }
+
     @Override
     public List<Member> findAll() {
         String sql = "select * from member";
+
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
+
         try {
             conn = getConnection();
             pstmt = conn.prepareStatement(sql);
+
             rs = pstmt.executeQuery();
+
             List<Member> members = new ArrayList<>();
             while(rs.next()) {
                 Member member = new Member();
@@ -103,6 +116,7 @@ public class JdbcMemberRepository implements MemberRepository{
             close(conn, pstmt, rs);
         }
     }
+
     @Override
     public Optional<Member> findByName(String name) {
         String sql = "select * from member where name = ?";
@@ -127,10 +141,13 @@ public class JdbcMemberRepository implements MemberRepository{
             close(conn, pstmt, rs);
         }
     }
+
     private Connection getConnection() {
-        return DataSourceUtils.getConnection(dataSource);
+        //spring framework를 쓸 때는 꼭 이렇게 받아와야함
+        return DataSourceUtils.getConnection(dataSource); //DataSourceUtils를 통해 connection을 얻어야 동일한 database connection을 유지시켜준다
     }
-    private void close(Connection conn, PreparedStatement pstmt, ResultSet rs)
+
+    private void close(Connection conn, PreparedStatement pstmt, ResultSet rs) //파라미터로 들어간 값 역순으로 닫아줌
     {
         try {
             if (rs != null) {
@@ -155,6 +172,7 @@ public class JdbcMemberRepository implements MemberRepository{
         }
     }
     private void close(Connection conn) throws SQLException {
+        //닫을 때도 DataSourceUtils를 통해 release를 해줘야함
         DataSourceUtils.releaseConnection(conn, dataSource);
     }
 }
