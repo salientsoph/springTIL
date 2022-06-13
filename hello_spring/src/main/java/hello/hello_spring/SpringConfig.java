@@ -2,6 +2,7 @@ package hello.hello_spring;
 
 
 import hello.hello_spring.repository.JdbcMemberRepository;
+import hello.hello_spring.repository.JdbcTemplateMemberRepository;
 import hello.hello_spring.repository.MemberRepository;
 import hello.hello_spring.repository.MemoryMemberRepository;
 import hello.hello_spring.service.MemberService;
@@ -31,6 +32,7 @@ public class SpringConfig {
     @Bean
     public MemberRepository memberRepository(){
         //return new MemoryMemberRepository();
-        return new JdbcMemberRepository(dataSource); //이때 들어가는 dataSource 파라미터는 spring이 제공하는걸 쓴다.
+        //return new JdbcMemberRepository(dataSource); //이때 들어가는 dataSource 파라미터는 spring이 제공하는걸 쓴다.
+        return new JdbcTemplateMemberRepository(dataSource);
     }
 }
