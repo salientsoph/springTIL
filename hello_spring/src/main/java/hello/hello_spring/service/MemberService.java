@@ -5,11 +5,13 @@ import hello.hello_spring.repository.MemberRepository;
 import hello.hello_spring.repository.MemoryMemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 //@Service
+@Transactional
 public class MemberService {
 
     private final MemberRepository memberRepository;
@@ -38,6 +40,7 @@ public class MemberService {
                 });*/               //해당 코드는 method로 extract 한다
 
 
+        //jpa는 join에서 모든 data 변경이 transaction 안에서 실행되어야함
         validateDuplicateMember(member);
 
         memberRepository.save(member);
